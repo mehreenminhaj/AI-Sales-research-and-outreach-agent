@@ -68,7 +68,7 @@ Orchestrator Agent
         └──► Personalized Outreach Agent (Draft Email Generation)
         │
         ▼
-🚨 MANDATORY HUMAN REVIEW 🚨 (State: PENDING_APPROVAL)
+ MANDATORY HUMAN REVIEW  (State: PENDING_APPROVAL)
         │
         ├──► [Human Rejection] ──► Status: REJECTED
         │
