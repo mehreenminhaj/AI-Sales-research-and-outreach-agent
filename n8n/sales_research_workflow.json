@@ -1,0 +1,155 @@
+{
+  "name": "AI Sales Research & Outreach Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Weekly Schedule (Mon 9 AM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sales-research-trigger",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 480]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/research",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"parameters\": {\n    \"country\": \"Pakistan\",\n    \"industry\": \"Software\",\n    \"max_companies\": 5,\n    \"target_company_size\": \"SME to Enterprise\",\n    \"product_description\": \"AI Customer Support Automation Engine\",\n    \"target_roles\": [\"CEO\", \"CTO\", \"Head of Engineering\", \"VP Product\"]\n  }\n}"
+      },
+      "id": "run-orchestrator",
+      "name": "Trigger Orchestrator Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 380]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:3000/api/leads?status=PENDING_APPROVAL"
+      },
+      "id": "fetch-pending",
+      "name": "Fetch Leads Awaiting Approval",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 380]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": "SALES_LEADS_SHEET_ID",
+        "sheetName": "Prospects",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Company": "={{ $json.company.name }}",
+            "Website": "={{ $json.company.website }}",
+            "Contact": "={{ $json.contact.name }}",
+            "Role": "={{ $json.contact.role }}",
+            "Lead Score": "={{ $json.qualification.score }}",
+            "Status": "={{ $json.status }}",
+            "Subject": "={{ $json.outreach.subject }}"
+          }
+        }
+      },
+      "id": "sync-google-sheets",
+      "name": "Sync to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [920, 380]
+    },
+    {
+      "parameters": {
+        "channel": "#sales-lead-approvals",
+        "text": "=🚀 New batch of {{ $json.length }} verified sales leads are ready for human review!\nAccess Dashboard: http://localhost:3000"
+      },
+      "id": "slack-alert",
+      "name": "Notify Sales Reviewer on Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1140, 380]
+    }
+  ],
+  "connections": {
+    "Weekly Schedule (Mon 9 AM)": {
+      "main": [
+        [
+          {
+            "node": "Trigger Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Trigger Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Orchestrator Agent": {
+      "main": [
+        [
+          {
+            "node": "Fetch Leads Awaiting Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Leads Awaiting Approval": {
+      "main": [
+        [
+          {
+            "node": "Sync to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Notify Sales Reviewer on Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

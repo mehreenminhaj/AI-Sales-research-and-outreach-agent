@@ -1,0 +1,6 @@
+{
+  "name": "AI Sales Research & Outreach Agent",
+  "description": "Autonomous sales prospect discovery, company qualification, decision-maker research, CRM deduplication, personalized outreach generation, and human-in-the-loop approval workflow.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
